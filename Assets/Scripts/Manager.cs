@@ -17,6 +17,7 @@ public class GameManager : MonoBehaviour
     public GameObject gameOverPanel;
     public Text finalScoreText;
     public Button restartButton;
+    public Button exitButton;  // Кнопка выхода
 
     public GameObject[] goodItems;
     public GameObject[] badItems;
@@ -51,7 +52,7 @@ public class GameManager : MonoBehaviour
     private bool isGameEnded = false;
     private bool hasPlayedEndSound = false;
 
-    private Canvas mainCanvas; // Запоминаем Canvas
+    private Canvas mainCanvas;
 
     void Start()
     {
@@ -61,7 +62,6 @@ public class GameManager : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
-        // Находим Canvas
         mainCanvas = FindObjectOfType<Canvas>();
 
         PlayBackgroundMusic();
@@ -103,6 +103,13 @@ public class GameManager : MonoBehaviour
         {
             restartButton.onClick.RemoveAllListeners();
             restartButton.onClick.AddListener(RestartGame);
+        }
+
+        // ===== НАСТРОЙКА КНОПКИ ВЫХОДА =====
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveAllListeners();
+            exitButton.onClick.AddListener(ExitGame);
         }
 
         UpdateScoreUI();
@@ -247,7 +254,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // ===== ЛЕТАЮЩАЯ ЦИФРА (через RectTransform) =====
+    // ===== ЛЕТАЮЩАЯ ЦИФРА =====
     private void CreateFloatingNumber(int points)
     {
         if (mainCanvas == null)
@@ -255,7 +262,6 @@ public class GameManager : MonoBehaviour
             mainCanvas = FindObjectOfType<Canvas>();
             if (mainCanvas == null)
             {
-                Debug.LogError("Canvas не найден!");
                 currentScore += points;
                 UpdateScoreUI();
                 return;
@@ -264,23 +270,18 @@ public class GameManager : MonoBehaviour
 
         if (scoreBackground == null)
         {
-            Debug.LogError("ScoreBackground не назначен!");
             currentScore += points;
             UpdateScoreUI();
             return;
         }
 
-        // Создаем GameObject
         GameObject floatingNumber = new GameObject("FloatingNumber");
         floatingNumber.transform.SetParent(mainCanvas.transform, false);
 
-        // Добавляем RectTransform для UI
         RectTransform rectTransform = floatingNumber.AddComponent<RectTransform>();
 
-        // Добавляем компонент Text
         Text textComp = floatingNumber.AddComponent<Text>();
 
-        // Твой шрифт
         if (customFont != null)
         {
             textComp.font = customFont;
@@ -294,7 +295,6 @@ public class GameManager : MonoBehaviour
         textComp.alignment = TextAnchor.MiddleCenter;
         textComp.raycastTarget = false;
 
-        // Текст и цвет
         string displayText = points > 0 ? "+" + points : points.ToString();
         textComp.text = displayText;
 
@@ -303,24 +303,17 @@ public class GameManager : MonoBehaviour
         else
             textComp.color = new Color(0.9f, 0.2f, 0.2f, 1f);
 
-        // Обводка
         Outline outline = floatingNumber.AddComponent<Outline>();
         outline.effectColor = Color.black;
         outline.effectDistance = new Vector2(1.5f, -1.5f);
 
-        // Получаем позицию иконки счета
         RectTransform scoreBgRect = scoreBackground.GetComponent<RectTransform>();
         Vector2 targetPosition = scoreBgRect.anchoredPosition;
-
-        // Стартовая позиция: выше иконки на 100 пикселей
         Vector2 startPosition = new Vector2(targetPosition.x, targetPosition.y + 120);
-
-        // Небольшой случайный разброс по X
         startPosition.x += Random.Range(-30f, 30f);
 
         rectTransform.anchoredPosition = startPosition;
 
-        // Запускаем анимацию
         if (points > 0)
         {
             StartCoroutine(FlyToTargetAnimation(floatingNumber, targetPosition, points));
@@ -329,11 +322,8 @@ public class GameManager : MonoBehaviour
         {
             StartCoroutine(ShakeAndFlyAnimation(floatingNumber, targetPosition, points));
         }
-
-        Debug.Log("Создана цифра на позиции: " + startPosition + ", цель: " + targetPosition);
     }
 
-    // Анимация для положительных очков
     private IEnumerator FlyToTargetAnimation(GameObject obj, Vector2 targetPos, int points)
     {
         RectTransform rectTransform = obj.GetComponent<RectTransform>();
@@ -346,20 +336,15 @@ public class GameManager : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / duration;
 
-            // Плавное движение
             Vector2 currentPos = Vector2.Lerp(startPos, targetPos, t);
-
-            // Легкое покачивание
             float swing = Mathf.Sin(t * Mathf.PI * 2) * 20f * (1 - t);
             currentPos.x += swing;
 
             rectTransform.anchoredPosition = currentPos;
 
-            // Уменьшение размера
             float scale = Mathf.Lerp(1f, 0.5f, t);
             rectTransform.localScale = new Vector3(scale, scale, 1);
 
-            // Прозрачность
             Text textComp = obj.GetComponent<Text>();
             if (textComp != null && t > 0.7f)
             {
@@ -379,7 +364,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(TextPopAnimation());
     }
 
-    // Анимация для отрицательных очков (с тряской)
     private IEnumerator ShakeAndFlyAnimation(GameObject obj, Vector2 targetPos, int points)
     {
         RectTransform rectTransform = obj.GetComponent<RectTransform>();
@@ -394,7 +378,6 @@ public class GameManager : MonoBehaviour
 
             Vector2 currentPos = Vector2.Lerp(startPos, targetPos, t);
 
-            // Тряска
             float shakeX = Random.Range(-40f, 40f) * (1 - t);
             float shakeY = Random.Range(-20f, 20f) * (1 - t);
             currentPos.x += shakeX;
@@ -402,15 +385,12 @@ public class GameManager : MonoBehaviour
 
             rectTransform.anchoredPosition = currentPos;
 
-            // Вращение
             float rotationZ = Mathf.Sin(t * Mathf.PI * 5) * 20f * (1 - t);
             rectTransform.rotation = Quaternion.Euler(0, 0, rotationZ);
 
-            // Уменьшение размера
             float scale = Mathf.Lerp(1f, 0.4f, t);
             rectTransform.localScale = new Vector3(scale, scale, 1);
 
-            // Прозрачность
             Text textComp = obj.GetComponent<Text>();
             if (textComp != null && t > 0.6f)
             {
@@ -430,7 +410,6 @@ public class GameManager : MonoBehaviour
         StartCoroutine(TextShakeAnimation());
     }
 
-    // Анимация увеличения текста счета
     private IEnumerator TextPopAnimation()
     {
         if (scoreText == null) yield break;
@@ -459,7 +438,6 @@ public class GameManager : MonoBehaviour
         scoreText.transform.localScale = originalScale;
     }
 
-    // Анимация тряски текста счета
     private IEnumerator TextShakeAnimation()
     {
         if (scoreText == null) yield break;
@@ -541,11 +519,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (audioSource != null)
-        {
-            audioSource.Stop();
-        }
-
+        // Музыка НЕ останавливается
         ShowGameOverPanel();
 
         Debug.Log("=========================================");
@@ -571,5 +545,20 @@ public class GameManager : MonoBehaviour
     {
         PlayClickSound();
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    // ===== МЕТОД ВЫХОДА =====
+    public void ExitGame()
+    {
+        PlayClickSound();
+        Debug.Log("Выход из игры...");
+
+#if UNITY_EDITOR
+            // Если в редакторе Unity - останавливаем
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+        // Если собранная игра - закрываем
+        Application.Quit();
+#endif
     }
 }
