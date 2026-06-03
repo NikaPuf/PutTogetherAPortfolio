@@ -25,9 +25,9 @@ public class PlayerController : MonoBehaviour
     public float tiltSpeed = 8f;       // Скорость анимации
 
     private SpriteRenderer spriteRenderer;
-    private bool isMoving = false;      // Движется ли персонаж
-    private float lastPositionX;        // Предыдущая позиция
-    private float currentTilt = 0f;     // Текущий угол наклона
+    private bool isMoving = false;
+    private float lastPositionX;
+    private float currentTilt = 0f;
 
     void Start()
     {
@@ -43,17 +43,15 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // ===== НОВОЕ: УПРАВЛЕНИЕ ЗАЖАТИЕМ МЫШКИ =====
-        // Если зажата левая кнопка мыши
-        if (Input.GetMouseButton(0)) // 0 - левая кнопка, GetMouseButton - пока зажата
+        // Управление зажатием мышки
+        if (Input.GetMouseButton(0))
         {
             Vector3 mousePosition = Input.mousePosition;
             Vector3 worldPosition = Camera.main.ScreenToWorldPoint(mousePosition);
             targetX = Mathf.Clamp(worldPosition.x, minX, maxX);
         }
 
-        // СТАРОЕ: управление кликом (оставляем для двух вариантов)
-        // Если кликнули (одиночный клик) - тоже работает
+        // Управление кликом
         if (Input.GetMouseButtonDown(0))
         {
             Vector3 mousePosition = Input.mousePosition;
@@ -61,7 +59,7 @@ public class PlayerController : MonoBehaviour
             targetX = Mathf.Clamp(worldPosition.x, minX, maxX);
         }
 
-        // ДВИЖЕНИЕ
+        // Движение
         Vector3 currentPosition = transform.position;
         if (Mathf.Abs(currentPosition.x - targetX) > 0.01f)
         {
@@ -88,6 +86,7 @@ public class PlayerController : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, currentTilt);
     }
 
+    // Метод для показа анимации удара (вызывается из FallingItem при ловле плохого предмета)
     public void ShowHitAnimation()
     {
         StopAllCoroutines();
@@ -96,13 +95,16 @@ public class PlayerController : MonoBehaviour
 
     private IEnumerator HitAnimationCoroutine()
     {
+        // Меняем спрайт на "ударный"
         if (spriteRenderer != null && hitSprite != null)
         {
             spriteRenderer.sprite = hitSprite;
         }
 
+        // Ждем указанное количество секунд
         yield return new WaitForSeconds(hitAnimationDuration);
 
+        // Возвращаем обычный спрайт
         if (spriteRenderer != null && normalSprite != null)
         {
             spriteRenderer.sprite = normalSprite;
