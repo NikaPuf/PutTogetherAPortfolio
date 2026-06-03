@@ -863,6 +863,7 @@ MonoBehaviour:
   gameEndSound: {fileID: 8300000, guid: 97735ff55c769aa42a6fd89cb08b7cab, type: 3}
   clickSound: {fileID: 8300000, guid: af9d9fc3e9f88f64298a88c215b1864b, type: 3}
   backgroundMusic: {fileID: 8300000, guid: 1bf191206e863244aa0e38877eac6df1, type: 3}
+  customFont: {fileID: 12800000, guid: 1a70e8167fb19af4a81a0f0adcbad1dd, type: 3}
   goodItemPoints: 6
   badItemPoints: -4
   spawnInterval: 0.8
@@ -1940,7 +1941,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1651377640
 RectTransform:
   m_ObjectHideFlags: 0
