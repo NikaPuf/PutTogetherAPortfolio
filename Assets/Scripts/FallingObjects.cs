@@ -4,6 +4,7 @@ public class FallingItem : MonoBehaviour
 {
     public float fallSpeed = 5f;
     public bool isGood = true;
+    private bool isCollected = false;  // Защита
 
     void Start()
     {
@@ -23,8 +24,12 @@ public class FallingItem : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
+        if (isCollected) return;
+
         if (other.CompareTag("Player"))
         {
+            isCollected = true;
+
             GameManager gameManager = FindObjectOfType<GameManager>();
             PlayerController playerController = other.GetComponent<PlayerController>();
 
@@ -32,13 +37,12 @@ public class FallingItem : MonoBehaviour
             {
                 if (isGood)
                 {
-                    gameManager.AddScore(1);
+                    gameManager.AddScore(gameManager.goodItemPoints);
                 }
                 else
                 {
-                    gameManager.AddScore(-1);
+                    gameManager.AddScore(gameManager.badItemPoints);
 
-                    // ===== НОВОЕ: вызываем анимацию удара у персонажа =====
                     if (playerController != null)
                     {
                         playerController.ShowHitAnimation();

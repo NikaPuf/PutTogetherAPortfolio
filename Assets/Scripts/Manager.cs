@@ -26,8 +26,15 @@ public class GameManager : MonoBehaviour
     // Звуки
     public AudioClip goodItemSound;
     public AudioClip badItemSound;
-    public AudioClip gameEndSound;    // Звук который играет 7 секунд
-    public AudioClip clickSound;      // Звук клика по кнопке
+    public AudioClip gameEndSound;
+    public AudioClip clickSound;
+
+    // Фоновая музыка
+    public AudioClip backgroundMusic;
+
+    // Очки за предметы
+    public int goodItemPoints = 7;
+    public int badItemPoints = -4;
 
     private AudioSource audioSource;
 
@@ -39,28 +46,26 @@ public class GameManager : MonoBehaviour
     private float timeRemaining;
     private bool isGameActive = false;
     private bool isGameEnded = false;
-    private bool hasPlayedEndSound = false; // Флаг для звука окончания
+    private bool hasPlayedEndSound = false;
 
     void Start()
     {
-        // Получаем компонент AudioSource
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
 
-        // Показываем фоны
+        PlayBackgroundMusic();
+
         if (scoreBackground != null) scoreBackground.SetActive(true);
         if (timerBackground != null) timerBackground.SetActive(true);
 
-        // Скрываем панель Game Over
         if (gameOverPanel != null)
         {
             gameOverPanel.SetActive(false);
         }
 
-        // Отключаем управление персонажем
         if (player != null)
         {
             PlayerController playerController = player.GetComponent<PlayerController>();
@@ -70,26 +75,22 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Проверяем массивы
         if ((goodItems == null || goodItems.Length == 0) || (badItems == null || badItems.Length == 0))
         {
             Debug.LogError("Массивы предметов пусты!");
         }
 
-        // Показываем панель с правилами
         if (rulesPanel != null)
         {
             rulesPanel.SetActive(true);
         }
 
-        // Настраиваем кнопку OK
         if (okButton != null)
         {
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(OnOkButtonPressed);
         }
 
-        // Настраиваем кнопку перезапуска
         if (restartButton != null)
         {
             restartButton.onClick.RemoveAllListeners();
@@ -100,11 +101,20 @@ public class GameManager : MonoBehaviour
         UpdateTimerUI();
     }
 
+    private void PlayBackgroundMusic()
+    {
+        if (audioSource != null && backgroundMusic != null)
+        {
+            audioSource.loop = true;
+            audioSource.clip = backgroundMusic;
+            audioSource.volume = 0.25f;
+            audioSource.Play();
+        }
+    }
+
     public void OnOkButtonPressed()
     {
-        // Звук клика
         PlayClickSound();
-
         Debug.Log("Кнопка OK нажата! Начинаем игру...");
 
         if (rulesPanel != null)
@@ -119,7 +129,7 @@ public class GameManager : MonoBehaviour
     {
         isGameActive = true;
         isGameEnded = false;
-        hasPlayedEndSound = false; // Сбрасываем флаг звука
+        hasPlayedEndSound = false;
         timeRemaining = gameDuration;
         timeUntilNextSpawn = 0f;
         currentScore = 0;
@@ -144,7 +154,6 @@ public class GameManager : MonoBehaviour
         timeRemaining -= Time.deltaTime;
         UpdateTimerUI();
 
-        // Звук включается, когда до конца игры остается 6 секунд
         if (!hasPlayedEndSound && timeRemaining <= 6f)
         {
             hasPlayedEndSound = true;
@@ -169,7 +178,7 @@ public class GameManager : MonoBehaviour
     {
         if (!isGameActive || isGameEnded) return;
 
-        bool spawnGood = Random.Range(0f, 1f) < 0.7f;
+        bool spawnGood = Random.Range(0f, 1f) < 0.85f;
         GameObject itemToSpawn = null;
 
         if (spawnGood)
@@ -197,25 +206,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Метод для звука хорошего предмета
     public void PlayGoodItemSound()
     {
         if (audioSource != null && goodItemSound != null)
         {
-            audioSource.PlayOneShot(goodItemSound);
+            audioSource.PlayOneShot(goodItemSound, 1.7f);
         }
     }
 
-    // Метод для звука плохого предмета
     public void PlayBadItemSound()
     {
         if (audioSource != null && badItemSound != null)
         {
-            audioSource.PlayOneShot(badItemSound);
+            audioSource.PlayOneShot(badItemSound, 1.3f);
         }
     }
 
-    // Метод для звука клика
     public void PlayClickSound()
     {
         if (audioSource != null && clickSound != null)
@@ -224,7 +230,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Метод для звука окончания (за 6 секунд до конца)
     private void PlayGameEndSound()
     {
         if (audioSource != null && gameEndSound != null)
@@ -234,6 +239,42 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // ===== НОВОЕ: анимация для текста счета =====
+    private void AnimateScoreText()
+    {
+        if (scoreText == null) return;
+        StopAllCoroutines();
+        StartCoroutine(TextPopAnimation());
+    }
+
+    private IEnumerator TextPopAnimation()
+    {
+        Vector3 originalScale = scoreText.transform.localScale;
+        float duration = 0.1f;
+        float elapsed = 0f;
+
+        // Увеличиваем текст
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float scale = Mathf.Lerp(1f, 1.3f, elapsed / duration);
+            scoreText.transform.localScale = originalScale * scale;
+            yield return null;
+        }
+
+        // Возвращаем обратно
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float scale = Mathf.Lerp(1.3f, 1f, elapsed / duration);
+            scoreText.transform.localScale = originalScale * scale;
+            yield return null;
+        }
+
+        scoreText.transform.localScale = originalScale;
+    }
+
     public void AddScore(int points)
     {
         if (!isGameActive || isGameEnded) return;
@@ -241,14 +282,35 @@ public class GameManager : MonoBehaviour
         if (points > 0)
         {
             PlayGoodItemSound();
+            StartCoroutine(TextPopAnimation());     // Увеличение для хороших
         }
         else if (points < 0)
         {
             PlayBadItemSound();
+            StartCoroutine(TextShakeAnimation());   // Тряска для плохих
         }
 
         currentScore += points;
         UpdateScoreUI();
+    }
+
+    // Анимация тряски для текста
+    private IEnumerator TextShakeAnimation()
+    {
+        Vector3 originalPosition = scoreText.transform.position;
+        float duration = 0.2f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float x = originalPosition.x + Random.Range(-5f, 5f);
+            float y = originalPosition.y + Random.Range(-5f, 5f);
+            scoreText.transform.position = new Vector3(x, y, originalPosition.z);
+            yield return null;
+        }
+
+        scoreText.transform.position = originalPosition;
     }
 
     void UpdateScoreUI()
@@ -264,7 +326,9 @@ public class GameManager : MonoBehaviour
         if (timerText != null)
         {
             int displayTime = Mathf.Max(0, Mathf.CeilToInt(timeRemaining));
-            timerText.text = displayTime.ToString();
+            int minutes = displayTime / 60;
+            int seconds = displayTime % 60;
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
         }
     }
 
@@ -275,7 +339,6 @@ public class GameManager : MonoBehaviour
         isGameActive = false;
         isGameEnded = true;
 
-        // Отключаем управление
         if (player != null)
         {
             PlayerController playerController = player.GetComponent<PlayerController>();
@@ -285,7 +348,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Останавливаем падающие предметы
         FallingItem[] items = FindObjectsOfType<FallingItem>();
         foreach (FallingItem item in items)
         {
@@ -295,13 +357,12 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // Показываем панель Game Over
-        ShowGameOverPanel();
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
 
-        Debug.Log("=========================================");
-        Debug.Log("ИГРА ОКОНЧЕНА!");
-        Debug.Log("Финальный счет: " + currentScore);
-        Debug.Log("=========================================");
+        ShowGameOverPanel();
     }
 
     void ShowGameOverPanel()
@@ -319,9 +380,7 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        // Звук клика
         PlayClickSound();
-
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 }
