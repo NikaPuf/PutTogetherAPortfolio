@@ -672,7 +672,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 00:15
+  m_Text: 00:20
 --- !u!1 &471906645
 GameObject:
   m_ObjectHideFlags: 0
@@ -1137,10 +1137,10 @@ MonoBehaviour:
   clickSound: {fileID: 8300000, guid: af9d9fc3e9f88f64298a88c215b1864b, type: 3}
   backgroundMusic: {fileID: 8300000, guid: 1bf191206e863244aa0e38877eac6df1, type: 3}
   customFont: {fileID: 12800000, guid: 1a70e8167fb19af4a81a0f0adcbad1dd, type: 3}
-  goodItemPoints: 3
+  goodItemPoints: 4
   badItemPoints: -2
   spawnInterval: 0.8
-  gameDuration: 30
+  gameDuration: 20
 --- !u!1 &786270577
 GameObject:
   m_ObjectHideFlags: 0
